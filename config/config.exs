@@ -14,8 +14,7 @@ config :imgur_backend, ImgurBackendWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "/JDeWeUG080E12ROz9FWUkeSTPlwU8XficN3Z128NhnF3pT7ZjL5ceg1TqYNJ4GO",
   render_errors: [view: ImgurBackendWeb.ErrorView, accepts: ~w(json)],
-  pubsub: [name: ImgurBackend.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: ImgurBackend.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -29,4 +28,10 @@ config :logger, :console,
 #   origin: ["http://localhost:4000.com"],
 #   max_age: 86400,
 #   methods: ["GET", "POST"]
-import_config "#{Mix.env}.exs"
+
+# Config guardian
+config :imgur_backend, ImgurBackend.Guardian,
+  issuer: "imgur_backend",
+  secret_key: "djKR/dka+Njg4u4PrT1/aFm7RnIB37eI5Is8ERme+borJIVAiBqYnXAj/0hlMfRm"
+
+import_config "#{Mix.env()}.exs"

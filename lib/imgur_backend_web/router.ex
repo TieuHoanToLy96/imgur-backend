@@ -2,14 +2,21 @@ defmodule ImgurBackendWeb.Router do
   use ImgurBackendWeb, :router
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug(:accepts, ["json"])
   end
 
   scope "/api", ImgurBackendWeb.V1 do
-    pipe_through :api
+    pipe_through(:api)
+
     scope "/v1" do
+      scope "/account" do
+        post("/create", AccountController, :create)
+        post("/sign_in", AccountController, :sign_in)
+        post("/me", AccountController, :auth_account)
+      end
+
       scope "/article" do
-        get("/all", ArticleController,  :index)
+        get("/all", ArticleController, :index)
       end
     end
   end
