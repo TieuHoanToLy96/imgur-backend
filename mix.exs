@@ -38,12 +38,15 @@ defmodule ImgurBackend.Mixfile do
       {:phoenix_ecto, "~> 3.2"},
       {:postgrex, ">= 0.0.0"},
       {:gettext, "~> 0.11"},
+      {:cowboy, "~> 1.0"},
       {:plug_cowboy, "~> 1.0"},
       {:slugger, "~> 0.3"},
       {:cors_plug, "~> 2.0"},
       {:guardian, "~> 1.0"},
       {:comeonin, "~> 5.1.1"},
-      {:bcrypt_elixir, "~> 2.0"}
+      {:bcrypt_elixir, "~> 2.0"},
+      {:httpoison, "~> 1.4"},
+      {:jason, "~> 1.1"}
     ]
   end
 

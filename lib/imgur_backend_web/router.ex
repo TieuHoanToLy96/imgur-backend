@@ -15,6 +15,10 @@ defmodule ImgurBackendWeb.Router do
         post("/me", AccountController, :auth_account)
       end
 
+      scope "/files" do
+        post("/upload", FileController, :upload_file)
+      end
+
       scope "/article" do
         get("/all", ArticleController, :index)
       end

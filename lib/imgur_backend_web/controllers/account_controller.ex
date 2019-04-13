@@ -32,8 +32,7 @@ defmodule ImgurBackendWeb.V1.AccountController do
              email: account.email,
              user_name: account.user_name,
              avatar: account.avatar
-           })
-           |> IO.inspect(label: "ddd") do
+           }) do
       account = AccountView.render("account_just_loaded.json", account)
 
       conn

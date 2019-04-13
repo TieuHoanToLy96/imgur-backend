@@ -3,7 +3,8 @@ defmodule ImgurBackendWeb.V1.AccountView do
     Map.take(account, [
       :user_name,
       :email,
-      :avatar
+      :avatar,
+      :id
     ])
   end
 

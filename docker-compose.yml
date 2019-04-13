@@ -1,7 +1,7 @@
 version: "3"
 services:
   phoenix:
-    container_name: imgur-app
+    container_name: imgur_app
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,6 +10,7 @@ services:
       PG_PASSWORD: postgres
       PG_HOST: imgur-postgres
     env_file: .dev.env
+    command: iex -S mix phx.server
     ports:
       - "8000:4000"
     volumes:
@@ -18,6 +19,15 @@ services:
       - imgur-postgres
     depends_on:
       - imgur-postgres
+    networks:
+      shared_network:
+        aliases:
+          - imgur-host
+      default: 
+        aliases:
+          - imgur-host
+    restart: always
+
   imgur-postgres:
     image: postgres:9.6.5-alpine
     container_name: imgur-postgres
@@ -30,5 +40,8 @@ services:
       PGDATA: /data/pgdata
     volumes:
       - ./data:/data:cached
-    networks:
-      - default
+
+networks:
+  shared_network:
+    external:
+      name: imgur_network

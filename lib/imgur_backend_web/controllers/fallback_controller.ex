@@ -18,4 +18,14 @@ defmodule ImgurBackendWeb.FallbackController do
     |> put_status(:unprocessable_entity)
     |> json(%{success: false, message: message})
   end
+
+  def call(conn, {:error, :entity_not_existed}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{
+      success: false,
+      message: "This entity is not existed",
+      fallback: "entity_not_existed"
+    })
+  end
 end
