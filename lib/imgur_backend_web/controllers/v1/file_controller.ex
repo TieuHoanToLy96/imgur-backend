@@ -1,12 +1,15 @@
 defmodule ImgurBackendWeb.V1.FileController do
   use ImgurBackendWeb, :controller
+  alias ImgurBackend.App.Tools
+
   action_fallback(ImgurBackendWeb.FallbackController)
   # file_size < 15Mb
   @max_file_size 15_728_640
   def upload_file(conn, params) do
     file = params["file"]
     file_type = file.content_type
-    [file_name, file_extension] = String.split(file.filename, ".")
+    file_extension = String.split(file.filename, ".") |> List.last()
+    file_name = (String.split(file.filename, ".") -- [file_extension]) |> Enum.join(".")
 
     %{"content-length" => file_size} =
       Enum.reduce(conn.req_headers, %{}, fn {k, v}, acc -> Map.put(acc, k, v) end)
@@ -17,6 +20,7 @@ defmodule ImgurBackendWeb.V1.FileController do
         else: System.get_env("IMGUR_STOGARE_SERVER")
 
     url_upload = "http://#{base_storage}:4000/api/v1/upload"
+    file_size = Tools.to_int(file_size)
 
     if file_size <= @max_file_size do
       case File.read(file.path) do

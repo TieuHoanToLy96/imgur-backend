@@ -36,5 +36,5 @@ config :imgur_backend, ImgurBackend.Guardian,
 
 # hackney
 config :hackney, max_connections: 1000
-
+config :phoenix, :json_library, Jason
 import_config "#{Mix.env()}.exs"

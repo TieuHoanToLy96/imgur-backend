@@ -9,8 +9,8 @@ defmodule ImgurBackend.Accounts do
 
   def get_account(id) do
     case Repo.get(Account, id) do
-      value -> {:ok, value}
       nil -> {:error, :entity_not_existed}
+      value -> {:ok, value}
     end
   end
 

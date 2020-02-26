@@ -9,7 +9,7 @@ defmodule ImgurBackendWeb.V1.AccountController do
 
   action_fallback(ImgurBackendWeb.FallbackController)
 
-  def auth_account(conn, %{"accessToken" => token}) do
+  def auth_account(_conn, %{"accessToken" => token}) do
     if Tools.is_empty?(token) do
       {:failed, :success_false_with_reason, "Bạn chưa có tài khoản"}
     else

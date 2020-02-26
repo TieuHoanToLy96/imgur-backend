@@ -18,4 +18,9 @@ defmodule ImgurBackend.App.Tools do
 
   def is_empty?(value) when value in [nil, "null", "", "undefined", %{}, []], do: true
   def is_empty?(_), do: false
+
+  def to_int(el) when el in [nil, "", "null", "undefined", "", [], %{}], do: 0
+  def to_int(el) when is_bitstring(el), do: String.to_integer(el)
+  def to_int(el) when is_integer(el), do: el
+  def to_int(_), do: 0
 end

@@ -6,7 +6,6 @@ defmodule ImgurBackend.Repo.Migrations.InitDatabase do
       add(:id, :binary_id, primary_key: true)
       add(:account_one_id, :binary_id, null: false)
       add(:account_two_id, :binary_id, null: false)
-      add(:status)
 
       timestamps()
     end
@@ -39,7 +38,7 @@ defmodule ImgurBackend.Repo.Migrations.InitDatabase do
 
     create table(:comments, primary_key: false) do
       add(:id, :binary_id, primary_key: true)
-      add(:is_deleted, :booleanm, default: false)
+      add(:is_deleted, :boolean, default: false)
       add(:content, :text, null: false)
       add(:image, :text)
       add(:reactions, {:array, :map}, default: [])
@@ -70,7 +69,7 @@ defmodule ImgurBackend.Repo.Migrations.InitDatabase do
 
     create table(:messages, primary_key: false) do
       add(:id, :binary_id, primary_key: true)
-      add(:message, :text, default: "beostronf")
+      add(:message, :text)
       add(:type, :integer)
       add(:reactions, {:array, :map}, default: [])
       add(:seen, :boolean, default: false)

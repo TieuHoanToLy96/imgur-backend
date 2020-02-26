@@ -42,5 +42,5 @@ config :imgur_backend, ImgurBackend.Repo,
   username: System.get_env("PG_USERNAME") || "postgres",
   password: System.get_env("PG_PASSWORD") || "postgres",
   database: System.get_env("IMGUR_DB_NAME") || "imgur_global_db",
-  hostname:  System.get_env("PG_HOST") || "localhost",
+  hostname: System.get_env("PG_HOST") || "localhost",
   pool_size: 10
