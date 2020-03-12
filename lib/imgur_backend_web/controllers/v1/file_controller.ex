@@ -16,11 +16,12 @@ defmodule ImgurBackendWeb.V1.FileController do
 
     base_storage =
       if System.get_env("MIX_ENV") != "prod",
-        do: System.get_env("IMGUR_STORAGE_DEV") <> ":4000",
-        else: System.get_env("IMGUR_STORAGE_HOST")
+        do: "http://imgur_storage:4000",
+        else: "https://" <> System.get_env("IMGUR_STORAGE_HOST")
 
-    url_upload = "https://#{base_storage}/api/v1/upload"
+    url_upload = "#{base_storage}/api/v1/upload"
     file_size = Tools.to_int(file_size)
+    IO.inspect(url_upload, label: "storageeeee")
 
     if file_size <= @max_file_size do
       case File.read(file.path) do
@@ -30,6 +31,7 @@ defmodule ImgurBackendWeb.V1.FileController do
             {"X-Content-Name", file_name},
             {"X-Content-Extension", file_extension}
           ])
+          |> IO.inspect(label: "resssss")
           |> case do
             {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
               body = Jason.decode!(body)

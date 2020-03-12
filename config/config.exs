@@ -11,7 +11,7 @@ config :imgur_backend,
 
 # Configures the endpoint
 config :imgur_backend, ImgurBackendWeb.Endpoint,
-  url: [host: "tieuhoan.dev"],
+  url: [host: "localhost"],
   secret_key_base: "/JDeWeUG080E12ROz9FWUkeSTPlwU8XficN3Z128NhnF3pT7ZjL5ceg1TqYNJ4GO",
   render_errors: [view: ImgurBackendWeb.ErrorView, accepts: ~w(json)],
   pubsub: [name: ImgurBackend.PubSub, adapter: Phoenix.PubSub.PG2]
