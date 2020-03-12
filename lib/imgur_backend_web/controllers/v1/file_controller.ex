@@ -15,11 +15,11 @@ defmodule ImgurBackendWeb.V1.FileController do
       Enum.reduce(conn.req_headers, %{}, fn {k, v}, acc -> Map.put(acc, k, v) end)
 
     base_storage =
-      if System.get_env("MIX_ENV") == "dev",
-        do: System.get_env("IMGUR_STORAGE_DEV"),
-        else: System.get_env("IMGUR_STOGARE_SERVER")
+      if System.get_env("MIX_ENV") != "prod",
+        do: System.get_env("IMGUR_STORAGE_DEV") <> ":4000",
+        else: System.get_env("IMGUR_STORAGE_HOST")
 
-    url_upload = "http://#{base_storage}:4000/api/v1/upload"
+    url_upload = "https://#{base_storage}/api/v1/upload"
     file_size = Tools.to_int(file_size)
 
     if file_size <= @max_file_size do
