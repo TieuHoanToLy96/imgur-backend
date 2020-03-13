@@ -18,6 +18,10 @@ defmodule ImgurBackendWeb.V1.AccountController do
         account = AccountView.render("account_just_loaded.json", account)
 
         {:success, :with_data, account}
+      else
+        reason ->
+          IO.inspect(reason, label: "aaaaaaaa")
+          {:failed, :success_false_with_reason, "Errrr"}
       end
     end
   end
