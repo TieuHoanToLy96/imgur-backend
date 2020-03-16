@@ -68,12 +68,18 @@ defmodule ImgurBackendWeb.V1.AccountController do
           password_hash: password_hash
         }
 
-        case Accounts.create_account(data) do
-          {:ok, account} ->
-            account = AccountView.render("account_just_loaded.json", account)
+        with {:ok, account} <- Accounts.create_account(data),
+             {:ok, token, _} <-
+               ImgurBackend.Guardian.encode_and_sign(account, %{
+                 id: account.id,
+                 email: account.email,
+                 user_name: account.user_name,
+                 avatar: account.avatar
+               }) do
+          account = AccountView.render("account_just_loaded.json", account)
 
-            {:success, :with_data, account, "Đăng kí tài khoản thành công"}
-
+          {:success, :with_data, :data, %{account: account, token: token}}
+        else
           {:error, changeset} ->
             message = Tools.get_error_message_from_changeset(changeset)
             {:failed, :success_false_with_reason, message}

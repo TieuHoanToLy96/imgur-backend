@@ -1,6 +1,22 @@
 defmodule ImgurBackendWeb.FallbackController do
   use ImgurBackendWeb, :controller
 
+  def call(conn, {:success, :with_data, key, data}) when is_bitstring(key) do
+    to_send = %{success: true, fallback: "with_data"} |> Map.put(String.to_atom(key), data)
+
+    conn
+    |> put_status(:ok)
+    |> json(to_send)
+  end
+
+  def call(conn, {:success, :with_data, key, data}) when is_atom(key) do
+    to_send = %{success: true, fallback: "with_data"} |> Map.put(key, data)
+
+    conn
+    |> put_status(:ok)
+    |> json(to_send)
+  end
+
   def call(conn, {:success, :with_data, data}) do
     conn
     |> put_status(:ok)
