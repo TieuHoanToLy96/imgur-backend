@@ -17,7 +17,7 @@ defmodule ImgurBackendWeb.V1.FileController do
     base_storage =
       if System.get_env("MIX_ENV") != "prod",
         do: "http://imgur_storage:4000",
-        else: "https://" <> System.get_env("IMGUR_STORAGE_HOST")
+        else: "https://storage.tieuhoan.dev"
 
     url_upload = "#{base_storage}/api/v1/upload"
     file_size = Tools.to_int(file_size)
