@@ -24,4 +24,10 @@ defmodule ImgurBackend.Accounts do
     |> Account.changeset(params)
     |> Repo.insert()
   end
+
+  def update_account(params) do
+    %Account{}
+    |> Account.changeset_update(params)
+    |> Repo.update()
+  end
 end

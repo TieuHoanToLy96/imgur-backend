@@ -21,7 +21,7 @@ defmodule ImgurBackendWeb.V1.AccountController do
       else
         reason ->
           IO.inspect(reason, label: "aaaaaaaa")
-          {:failed, :success_false_with_reason, "Errrr"}
+          {:failed, :success_false_with_reason, "Error"}
       end
     end
   end
@@ -31,12 +31,16 @@ defmodule ImgurBackendWeb.V1.AccountController do
 
     with {:ok, account} <- Account.check_password(password_hash, user),
          {:ok, token, _} <-
-           ImgurBackend.Guardian.encode_and_sign(account, %{
-             id: account.id,
-             email: account.email,
-             user_name: account.user_name,
-             avatar: account.avatar
-           }) do
+           ImgurBackend.Guardian.encode_and_sign(
+             account,
+             %{
+               id: account.id,
+               email: account.email,
+               user_name: account.user_name,
+               avatar: account.avatar
+             },
+             week: 4
+           ) do
       account = AccountView.render("account_just_loaded.json", account)
 
       conn
@@ -84,6 +88,13 @@ defmodule ImgurBackendWeb.V1.AccountController do
             message = Tools.get_error_message_from_changeset(changeset)
             {:failed, :success_false_with_reason, message}
         end
+    end
+  end
+
+  def update(_conn, params) do
+    with {:ok, account} <- Accounts.update_account(params) do
+      account = AccountView.render("account_just_loaded.json", account)
+      {:success, :with_data, :data, %{account: account}}
     end
   end
 end

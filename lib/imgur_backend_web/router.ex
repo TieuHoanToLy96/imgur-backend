@@ -11,6 +11,7 @@ defmodule ImgurBackendWeb.Router do
     scope "/v1" do
       scope "/account" do
         post("/create", AccountController, :create)
+        post("/update", AccountController, :update)
         post("/sign_in", AccountController, :sign_in)
         post("/me", AccountController, :auth_account)
       end

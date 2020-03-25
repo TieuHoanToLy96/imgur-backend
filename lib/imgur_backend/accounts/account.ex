@@ -39,6 +39,19 @@ defmodule ImgurBackend.Accounts.Account do
     |> put_password_hash()
   end
 
+  def changeset_update(%Account, attrs) do
+    account
+    |> cast(attrs, [:user_name, :email, :avatar])
+    |> unique_constraint(:user_name,
+      name: :accounts_user_name_index,
+      message: "Username đã tồn tại"
+    )
+    |> unique_constraint(:email,
+      name: :accounts_email_index,
+      message: "Email đã được đăng kí"
+    )
+  end
+
   def put_password_hash(changeset) do
     case changeset do
       %Ecto.Changeset{valid?: true, changes: %{password_hash: pass}} ->
