@@ -39,7 +39,7 @@ defmodule ImgurBackend.Accounts.Account do
     |> put_password_hash()
   end
 
-  def changeset_update(%Account, attrs) do
+  def changeset_update(%Account{} = account, attrs) do
     account
     |> cast(attrs, [:user_name, :email, :avatar])
     |> unique_constraint(:user_name,

@@ -92,8 +92,9 @@ defmodule ImgurBackendWeb.V1.AccountController do
   end
 
   def update(_conn, params) do
-    with {:ok, account} <- Accounts.update_account(params) do
-      account = AccountView.render("account_just_loaded.json", account)
+    with {:ok, account} <- Accounts.get_account(params["account"]["id"]),
+         {:ok, updated_account} <- Accounts.update_account(account, params["account"]) do
+      account = AccountView.render("account_just_loaded.json", updated_account)
       {:success, :with_data, :data, %{account: account}}
     end
   end
