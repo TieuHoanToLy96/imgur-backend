@@ -98,4 +98,15 @@ defmodule ImgurBackendWeb.V1.AccountController do
       {:success, :with_data, :data, %{account: account}}
     end
   end
+
+  def get_user(_conn, params) do
+    with {:ok, value} <- Accounts.get_user_by_url(params["account_url"]) do
+      value = AccountView.render("account_just_loaded.json", value)
+      {:success, :with_data, :user, value}
+    else
+      {:error, :entity_not_existed} ->
+        message = "Account not existed"
+        {:failed, :success_false_with_reason, message}
+    end
+  end
 end

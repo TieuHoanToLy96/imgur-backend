@@ -2,6 +2,7 @@ defmodule ImgurBackend.Accounts.Account do
   use Ecto.Schema
   import Ecto.Changeset
   alias ImgurBackend.Accounts.Account
+  alias ImgurBackend.Upload.Article
 
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "accounts" do
@@ -10,13 +11,16 @@ defmodule ImgurBackend.Accounts.Account do
     field(:password_hash, :string)
     field(:is_global_admin, :boolean, default: false)
     field(:avatar, :string)
+    field(:account_url, :string, null: false)
+
+    has_many(:articles, Article, foreign_key: :account_id)
     timestamps()
   end
 
   def changeset(%Account{} = account, attrs) do
     account
-    |> cast(attrs, [:user_name, :email, :password_hash, :avatar])
-    |> validate_required([:user_name, :email, :password_hash],
+    |> cast(attrs, [:user_name, :email, :password_hash, :avatar, :account_url])
+    |> validate_required([:user_name, :email, :password_hash, :account_url],
       message: "Không để thiếu username, email hoặc password"
     )
     |> validate_length(:user_name,

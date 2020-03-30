@@ -10,6 +10,7 @@ defmodule ImgurBackendWeb.Router do
 
     scope "/v1" do
       scope "/account" do
+        get("/get_user", AccountController, :get_user)
         post("/create", AccountController, :create)
         post("/update", AccountController, :update)
         post("/sign_in", AccountController, :sign_in)
@@ -21,7 +22,9 @@ defmodule ImgurBackendWeb.Router do
       end
 
       scope "/article" do
-        get("/all", ArticleController, :index)
+        get("/show", ArticleController, :show)
+        get("/search", ArticleController, :index)
+        post("/create_or_update", ArticleController, :create_or_update)
       end
     end
   end

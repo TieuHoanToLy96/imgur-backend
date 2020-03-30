@@ -34,6 +34,10 @@ config :imgur_backend, ImgurBackend.Guardian,
   issuer: "imgur_backend",
   secret_key: "djKR/dka+Njg4u4PrT1/aFm7RnIB37eI5Is8ERme+borJIVAiBqYnXAj/0hlMfRm"
 
+config :imgur_backend, ImgurBackendWeb.Gettext, default_locale: "vi"
+
+config :gettext, :default_locale, "vi"
+
 # hackney
 config :hackney, max_connections: 1000
 config :phoenix, :json_library, Jason

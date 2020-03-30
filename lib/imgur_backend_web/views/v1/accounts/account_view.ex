@@ -4,7 +4,8 @@ defmodule ImgurBackendWeb.V1.AccountView do
       :user_name,
       :email,
       :avatar,
-      :id
+      :id,
+      :account_url
     ])
   end
 

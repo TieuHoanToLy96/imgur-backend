@@ -1,0 +1,2 @@
+msgid "Account not existed"
+msgstr "Tài khoản không tồn tại"
