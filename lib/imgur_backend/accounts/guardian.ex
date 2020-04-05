@@ -11,6 +11,7 @@ defmodule ImgurBackend.Guardian do
   def resource_from_claims(claims) do
     id = claims["sub"]
     user = Accounts.get_account_by_id(id)
+    IO.inspect(user, label: "aaaa")
     {:ok, user}
   end
 end

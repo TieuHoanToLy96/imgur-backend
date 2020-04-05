@@ -40,12 +40,19 @@ defmodule ImgurBackendWeb.V1.ArticleView do
         data
       end
 
+    data =
+      if Ecto.assoc_loaded?(article.article_views) do
+        Map.put(data, :view_count, article.article_views || 0)
+      else
+        data
+      end
+
     data
   end
 
   def render_many("articles.json", articles) do
     Enum.map(articles, fn el ->
-      render("article_just_loaded.json", el)
+      render("article.json", el)
     end)
   end
 end

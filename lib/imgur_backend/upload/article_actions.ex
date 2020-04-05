@@ -1,7 +1,7 @@
 defmodule ImgurBackend.Upload.ArticleAction do
   import Ecto.Query, warn: false
   alias ImgurBackend.Repo
-  alias ImgurBackend.Upload.{Article, Tag, ArticleTag, ArticleContent}
+  alias ImgurBackend.Upload.{Article, Tag, ArticleTag, ArticleContent, ArticleView}
 
   def create_or_update_article(account_id, params) do
     params = Map.put(params, "account_id", account_id)
@@ -132,5 +132,44 @@ defmodule ImgurBackend.Upload.ArticleAction do
       nil -> {:error, :entity_not_existed}
       value -> {:ok, value}
     end
+  end
+
+  def search_articles_user(params) do
+    IO.inspect(params, label: "1111111")
+    preload_contents = from(ac in ArticleContent, where: ac.is_deleted == false)
+    #     preload_views = from(av in ArticleView, select: sum(av.count))
+
+    condition_where =
+      dynamic([a], a.account_id == ^params["account_id"] and a.is_deleted == false)
+
+    condition_where =
+      case params["type"] do
+        "2" ->
+          dynamic([a], ^condition_where and a.is_published == true)
+
+        "3" ->
+          dynamic([a], ^condition_where and a.is_published == false)
+
+        _ ->
+          condition_where
+      end
+
+    query =
+      from(
+        a in Article,
+        where: ^condition_where,
+        left_join: av in ArticleView,
+        on: av.article_id == a.id,
+        preload: [
+          article_contents: ^preload_contents
+          # article_views: ^preload_views
+        ],
+        group_by: [av.id, a.id],
+        order_by: a.inserted_at,
+        select_merge: %{article_views: sum(av.count)}
+      )
+
+    {:ok, Repo.all(query)}
+    |> IO.inspect(label: "iiiiiii")
   end
 end

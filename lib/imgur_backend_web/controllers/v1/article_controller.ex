@@ -7,8 +7,12 @@ defmodule ImgurBackendWeb.V1.ArticleController do
 
   action_fallback(ImgurBackendWeb.FallbackController)
 
-  def index(conn, _params) do
-    json(conn, %{success: true})
+  def index(_conn, params) do
+    with {:ok, articles} <- ArticleAction.search_articles_user(params) do
+      articles = ArticleView.render_many("articles.json", articles)
+
+      {:success, :with_data, :articles, articles}
+    end
   end
 
   def create_or_update(_conn, params) do
@@ -46,9 +50,12 @@ defmodule ImgurBackendWeb.V1.ArticleController do
     end
   end
 
-  def show(_conn, params) do
+  def show(conn, params) do
     account_id = params["account_id"]
     article_id = params["article_id"]
+    IO.inspect(conn, label: "llll")
+
+    resource = ImgurBackend.Guardian.Plug.current_resource(conn) |> IO.inspect(label: "oooooo")
 
     with {:ok, article} <- ArticleAction.get_article(article_id, account_id) do
       article = ArticleView.render("article.json", article)
