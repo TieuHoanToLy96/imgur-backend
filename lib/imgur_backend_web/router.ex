@@ -33,6 +33,18 @@ defmodule ImgurBackendWeb.Router do
         get("/search", ArticleController, :index)
         post("/create_or_update", ArticleController, :create_or_update)
       end
+
+      scope "/comment" do
+        pipe_through(:app)
+        get("/list", ArticleController, :get_comments)
+        post("/create_or_update", ArticleController, :create_or_update_comment)
+        post("/reaction", ArticleController, :update_reaction_comment)
+      end
+
+      scope "/reaction" do
+        pipe_through(:app)
+        post("/create_or_update", ArticleController, :create_or_update_reaction)
+      end
     end
   end
 end

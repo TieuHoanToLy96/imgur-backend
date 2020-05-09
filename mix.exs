@@ -47,7 +47,7 @@ defmodule ImgurBackend.Mixfile do
       {:bcrypt_elixir, "~> 2.0"},
       {:httpoison, "~> 1.4"},
       {:jason, "~> 1.1"},
-      {:amqp, "~> 1.2"},
+      {:amqp, "~> 1.4"},
       {:ranch, "~> 1.7.1"},
       {:edeliver, ">= 1.6.0"},
       {:distillery, "~> 2.0", warn_missing: false}

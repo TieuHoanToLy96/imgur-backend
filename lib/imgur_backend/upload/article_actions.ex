@@ -1,7 +1,20 @@
 defmodule ImgurBackend.Upload.ArticleAction do
   import Ecto.Query, warn: false
   alias ImgurBackend.Repo
-  alias ImgurBackend.Upload.{Article, Tag, ArticleTag, ArticleContent, ArticleView}
+
+  alias ImgurBackend.Upload.{
+    ArticleReaction,
+    Article,
+    Tag,
+    ArticleTag,
+    ArticleContent,
+    ArticleView,
+    Comment,
+    CommentReaction
+  }
+
+  alias ImgurBackend.App.Tools
+  alias ImgurBackend.Accounts.Account
 
   def create_or_update_article(account_id, params) do
     params = Map.put(params, "account_id", account_id)
@@ -122,15 +135,35 @@ defmodule ImgurBackend.Upload.ArticleAction do
     preload_article_tags =
       from(at in ArticleTag, where: at.is_deleted == false, preload: [tag: ^preload_tags])
 
-    from(
-      a in Article,
+    preload_reactions = from(ar in ArticleReaction)
+
+    preload_account = from(a in Account)
+
+    from(a in Article,
       where: a.account_id == ^account_id and a.id == ^article_id and a.is_deleted == false,
-      preload: [article_tags: ^preload_article_tags, article_contents: ^preload_contents]
+      preload: [
+        article_tags: ^preload_article_tags,
+        article_contents: ^preload_contents,
+        reactions: ^preload_reactions
+      ]
     )
     |> Repo.one()
     |> case do
-      nil -> {:error, :entity_not_existed}
-      value -> {:ok, value}
+      nil ->
+        {:error, :entity_not_existed}
+
+      value ->
+        reaction_count =
+          from(ar in ArticleReaction,
+            where: ar.article_id == ^article_id,
+            select: %{count: count(ar.type_reaction), type_reaction: ar.type_reaction},
+            group_by: [ar.type_reaction, ar.article_id],
+            order_by: [asc: ar.type_reaction]
+          )
+          |> Repo.all()
+
+        value = Map.put(value, :reaction_count, reaction_count)
+        {:ok, value}
     end
   end
 
@@ -171,5 +204,112 @@ defmodule ImgurBackend.Upload.ArticleAction do
 
     {:ok, Repo.all(query)}
     |> IO.inspect(label: "iiiiiii")
+  end
+
+  def create_or_update_comment(account_id, params) do
+    if id = params["id"] do
+      Repo.get_by(Comment, %{id: id, is_deleted: false})
+      |> case do
+        nil -> %Comment{}
+        value -> value
+      end
+    else
+      %Comment{}
+    end
+    |> Comment.changeset(Map.merge(params, %{"account_id" => account_id}))
+    |> Repo.insert_or_update()
+  end
+
+  def get_comment(id) do
+    preload_account = from(a in Account)
+
+    from(
+      c in Comment,
+      where: c.id == ^id and c.is_deleted == false,
+      preload: [account: ^preload_account]
+    )
+    |> Repo.one()
+    |> case do
+      nil -> {:error, :entity_not_existed}
+      value -> {:ok, value}
+    end
+  end
+
+  def create_or_update_reaction(account_id, params) do
+    Repo.get_by(ArticleReaction, %{
+      account_id: account_id,
+      article_id: params["article_id"]
+    })
+    |> case do
+      nil -> %ArticleReaction{}
+      value -> value
+    end
+    |> ArticleReaction.changeset(params)
+    |> Repo.insert_or_update()
+  end
+
+  def get_comments(params) do
+    IO.inspect(params, label: "oooo")
+    article_id = params["article_id"]
+    limit = Tools.to_int(params["limit"] || 100)
+    page = Tools.to_int(params["page"] || 1)
+    offset = (page - 1) * limit
+
+    preload_account = from(a in Account)
+
+    preload_child_comments =
+      from(
+        c in Comment,
+        where: c.is_deleted == false,
+        preload: [account: ^preload_account]
+      )
+
+    query =
+      from(
+        c in Comment,
+        where: c.is_deleted == false and c.article_id == ^article_id and is_nil(c.parent_id),
+        preload: [
+          child_comments: ^preload_child_comments,
+          account: ^preload_account
+        ]
+      )
+
+    comments =
+      from(
+        c in query,
+        offset: ^offset,
+        limit: ^limit
+      )
+      |> Repo.all()
+
+    count =
+      from(
+        c in Comment,
+        where: c.is_deleted == false and c.article_id == ^article_id,
+        select: count(c.id)
+      )
+      |> Repo.all()
+      |> List.first()
+
+    if count,
+      do: {:ok, %{comments: comments, count: count}},
+      else: {:error, :failed}
+  end
+
+  def update_reaction_comment(account_id, params) do
+    if id = params["id"] do
+      Repo.get_by(CommentReaction, %{id: id})
+    else
+      Repo.get_by(CommentReaction, %{
+        comment_id: params["comment_id"],
+        account_id: account_id
+      })
+    end
+    |> case do
+      nil -> %CommentReaction{}
+      value -> value
+    end
+    |> CommentReaction.changeset(params)
+    |> Repo.insert_or_update()
   end
 end

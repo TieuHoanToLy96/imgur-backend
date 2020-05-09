@@ -2,7 +2,7 @@ defmodule ImgurBackendWeb.V1.ArticleController do
   use ImgurBackendWeb, :controller
   alias Ecto.Multi
   alias ImgurBackendWeb.V1.ArticleView
-  alias ImgurBackend.Upload.ArticleAction
+  alias ImgurBackend.Upload.{ArticleAction, Comment, ArticleReaction}
   alias ImgurBackend.Repo
 
   action_fallback(ImgurBackendWeb.FallbackController)
@@ -53,13 +53,70 @@ defmodule ImgurBackendWeb.V1.ArticleController do
   def show(conn, params) do
     account_id = params["account_id"]
     article_id = params["article_id"]
-    IO.inspect(conn, label: "llll")
 
-    resource = ImgurBackend.Guardian.Plug.current_resource(conn) |> IO.inspect(label: "oooooo")
+    _resource = ImgurBackend.Guardian.Plug.current_resource(conn) |> IO.inspect(label: "oooooo")
 
     with {:ok, article} <- ArticleAction.get_article(article_id, account_id) do
       article = ArticleView.render("article.json", article)
       {:success, :with_data, :article, article}
+    end
+  end
+
+  def create_or_update_comment(conn, params) do
+    account_id = conn.assigns.account.id
+
+    multi =
+      Multi.new()
+      |> Multi.run(:comment, fn _ ->
+        ArticleAction.create_or_update_comment(account_id, params)
+      end)
+
+    case Repo.transaction(multi) do
+      {:ok, result} ->
+        c = result.comment
+
+        with {:ok, comment} <- ArticleAction.get_comment(c.id) do
+          comment = Comment.to_json("comment.json", comment)
+          {:success, :with_data, :comment, comment}
+        end
+
+      reason ->
+        IO.inspect(reason, label: "create_or_update_comment ERROR")
+        {:failed, :with_reason, "Xảy ra lỗi"}
+    end
+  end
+
+  def create_or_update_reaction(conn, params) do
+    account_id = conn.assigns.account.id
+
+    multi =
+      Multi.new()
+      |> Multi.run(:reaction, fn _ ->
+        ArticleAction.create_or_update_reaction(account_id, params)
+      end)
+
+    case Repo.transaction(multi) do
+      {:ok, result} ->
+        reaction = ArticleReaction.to_json("reaction.json", result.reaction)
+        {:success, :with_data, :reaction, reaction}
+
+      reason ->
+        IO.inspect(reason, label: "create_or_update_reaction ERROR")
+        {:failed, :with_reason, "Xảy ra lỗi"}
+    end
+  end
+
+  def get_comments(conn, params) do
+    with {:ok, %{comments: comments, count: count}} <- ArticleAction.get_comments(params) do
+      comments = Comment.to_json("comments.json", comments)
+      {:success, :with_data, :data, %{comments: comments, count: count}}
+    end
+  end
+
+  def update_reaction_comment(conn, params) do
+    account_id = conn.assigns.account.id
+
+    with {:ok, _} <- ArticleAction.update_reaction_comment(account_id, params) do
     end
   end
 end

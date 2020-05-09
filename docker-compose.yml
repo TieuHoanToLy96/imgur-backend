@@ -41,6 +41,19 @@ services:
     volumes:
       - ./data:/data:cached
 
+  imgur-rabbitmq:
+    image: rabbitmq:3.7.5-management
+    container_name: imgur-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: imgur
+      RABBITMQ_DEFAULT_PASS: imgur
+      RABBITMQ_DEFAULT_VHOST: v1
+    ports:
+     - 5677:5672
+     - 15677:15672
+    networks:
+      - shared_network
+      - default
 networks:
   shared_network:
     external:

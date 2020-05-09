@@ -1,7 +1,16 @@
 defmodule ImgurBackend.Upload.Article do
   use Ecto.Schema
   import Ecto.Changeset
-  alias ImgurBackend.Upload.{Article, ArticleTag, ArticleContent, ArticleView}
+
+  alias ImgurBackend.Upload.{
+    Article,
+    ArticleTag,
+    ArticleContent,
+    ArticleView,
+    Comment,
+    ArticleReaction
+  }
+
   alias ImgurBackend.Accounts.Account
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -15,6 +24,8 @@ defmodule ImgurBackend.Upload.Article do
     has_many(:article_tags, ArticleTag, foreign_key: :article_id)
     has_many(:article_contents, ArticleContent, foreign_key: :article_id)
     has_many(:article_views, ArticleView, foreign_key: :article_id)
+    has_many(:comments, Comment, foreign_key: :article_id)
+    has_many(:reactions, ArticleReaction, foreign_key: :article_id)
     timestamps()
   end
 

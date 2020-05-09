@@ -17,4 +17,14 @@ defmodule ImgurBackend.Upload.CommentReaction do
     |> cast(attrs, [:type_reaction, :account_id, :comment_id])
     |> validate_required([:account_id, :comment_id])
   end
+
+  def to_json("reaction.json", reaction) do
+    data = Map.take(reaction, [:comment_id, :id, :account_id, :type_reaction])
+
+    data
+  end
+
+  def to_json("reactions.json", reactions) do
+    Enum.map(reactions, &to_json("reaction.json", &1))
+  end
 end
