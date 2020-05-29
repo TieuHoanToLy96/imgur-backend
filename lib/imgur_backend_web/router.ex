@@ -35,7 +35,7 @@ defmodule ImgurBackendWeb.Router do
       end
 
       scope "/article" do
-        pipe_through(:app)
+        # pipe_through(:app)
         get("/show", ArticleController, :show)
         get("/search", ArticleController, :index)
 

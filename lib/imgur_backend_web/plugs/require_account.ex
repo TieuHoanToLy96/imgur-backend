@@ -2,8 +2,7 @@ defmodule ImgurBackendWeb.Plug.RequireAccount do
   import Plug.Conn
   import Phoenix.Controller
 
-  alias ImgurBackend.Accounts
-  alias ImgurBackend.Guardian
+  import ImgurBackend.{Accounts, Guardian}
 
   def init(opts) do
     opts
