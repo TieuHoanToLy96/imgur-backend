@@ -42,4 +42,41 @@ defmodule ImgurBackend.Accounts do
       account -> {:ok, account}
     end
   end
+
+  def get_accounts(params) do
+    term = params["term"]
+    page = params["page"] || 1
+    limit = params["limit"] || 50
+    offset = (page - 1) * limit
+
+    query = from(a in Account)
+    count = from(a in query, select: count(a.id)) |> Repo.one()
+
+    accounts =
+      from(
+        a in query,
+        where: ilike(a.user_name, ^"%#{term}%") or ilike(a.email, ^"%#{term}%"),
+        offset: ^offset,
+        limit: ^limit
+      )
+      |> Repo.all()
+
+    {:ok, %{count: count, accounts: accounts}}
+  end
+
+  def get_update_account_params(params) do
+    account = params["account"]
+    IO.inspect(account, label: "aaaaa")
+
+    if account["password"] do
+      if account["password"] == account["re_password"] do
+        account = Map.put(account, "password_hash", Bcrypt.hash_pwd_salt(account["password"]))
+        {:ok, Map.put(params, "account", account)}
+      else
+        {:error, "2 mật khẩu không khớp"}
+      end
+    else
+      {:ok, params}
+    end
+  end
 end

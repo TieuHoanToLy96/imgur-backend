@@ -8,12 +8,9 @@ defmodule ImgurBackend.Application do
 
     # Define workers and child supervisors to be supervised
     children = [
-      # Start the Ecto repository
       supervisor(ImgurBackend.Repo, []),
-      # Start the endpoint when the application starts
       supervisor(ImgurBackendWeb.Endpoint, []),
-      # Start your own worker by calling: ImgurBackend.Worker.start_link(arg1, arg2, arg3)
-      # worker(ImgurBackend.Worker, [arg1, arg2, arg3]),
+      # supervisor(ImgurBackend.App.AmqpConnectionManager, [])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

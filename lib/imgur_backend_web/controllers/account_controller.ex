@@ -92,10 +92,17 @@ defmodule ImgurBackendWeb.V1.AccountController do
   end
 
   def update(_conn, params) do
-    with {:ok, account} <- Accounts.get_account(params["account"]["id"]),
+    with {:ok, params} <- Accounts.get_update_account_params(params) |> IO.inspect(label: "dddddd"),
+         {:ok, account} <- Accounts.get_account(params["account"]["id"]),
          {:ok, updated_account} <- Accounts.update_account(account, params["account"]) do
       account = AccountView.render("account_just_loaded.json", updated_account)
       {:success, :with_data, :data, %{account: account}}
+    else
+      {:error, message} ->
+        {:failed, :success_false_with_reason, message}
+
+      _ ->
+        {:failed, :success_false_with_reason, "error"}
     end
   end
 

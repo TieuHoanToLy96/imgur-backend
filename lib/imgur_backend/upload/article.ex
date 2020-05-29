@@ -19,6 +19,7 @@ defmodule ImgurBackend.Upload.Article do
     field(:is_deleted, :boolean, default: false)
     field(:is_published, :boolean, default: false)
     field(:type, :integer, default: 0)
+    field(:is_story, :boolean, default: false)
 
     belongs_to(:account, Account, foreign_key: :account_id, type: :binary_id)
     has_many(:article_tags, ArticleTag, foreign_key: :article_id)
@@ -26,6 +27,9 @@ defmodule ImgurBackend.Upload.Article do
     has_many(:article_views, ArticleView, foreign_key: :article_id)
     has_many(:comments, Comment, foreign_key: :article_id)
     has_many(:reactions, ArticleReaction, foreign_key: :article_id)
+
+    has_many(:count_comments, Comment, foreign_key: :article_id)
+    has_many(:count_reactions, ArticleReaction, foreign_key: :article_id)
     timestamps()
   end
 
@@ -36,7 +40,8 @@ defmodule ImgurBackend.Upload.Article do
       :is_deleted,
       :is_published,
       :type,
-      :account_id
+      :account_id,
+      :is_story
     ])
     |> validate_required([:title, :account_id])
   end

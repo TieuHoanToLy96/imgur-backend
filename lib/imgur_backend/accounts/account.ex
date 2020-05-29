@@ -12,6 +12,7 @@ defmodule ImgurBackend.Accounts.Account do
     field(:is_global_admin, :boolean, default: false)
     field(:avatar, :string)
     field(:account_url, :string, null: false)
+    field(:settings, :map, default: %{})
 
     has_many(:articles, Article, foreign_key: :account_id)
     timestamps()
@@ -19,7 +20,7 @@ defmodule ImgurBackend.Accounts.Account do
 
   def changeset(%Account{} = account, attrs) do
     account
-    |> cast(attrs, [:user_name, :email, :password_hash, :avatar, :account_url])
+    |> cast(attrs, [:user_name, :email, :password_hash, :avatar, :account_url, :settings])
     |> validate_required([:user_name, :email, :password_hash, :account_url],
       message: "Không để thiếu username, email hoặc password"
     )
@@ -72,5 +73,13 @@ defmodule ImgurBackend.Accounts.Account do
     if Bcrypt.verify_pass(password, user.password_hash),
       do: {:ok, user},
       else: {:error, "Password hoặc username không đúng"}
+  end
+
+  def to_json("account.json", account) do
+    Map.take(account, [:id, :user_name, :email, :avatar, :account_url])
+  end
+
+  def to_json("accounts.json", accounts) do
+    Enum.map(accounts, &to_json("account.json", &1))
   end
 end

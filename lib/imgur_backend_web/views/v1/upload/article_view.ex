@@ -1,5 +1,6 @@
 defmodule ImgurBackendWeb.V1.ArticleView do
   alias ImgurBackend.Upload.{ArticleContent, Comment, ArticleReaction}
+  alias ImgurBackend.Accounts.Account
 
   def render("article_just_loaded.json", article) do
     Map.take(article, [
@@ -9,7 +10,8 @@ defmodule ImgurBackendWeb.V1.ArticleView do
       :is_published,
       :type,
       :id,
-      :reaction_count
+      :reaction_count,
+      :is_story
     ])
   end
 
@@ -60,6 +62,28 @@ defmodule ImgurBackendWeb.V1.ArticleView do
       if Ecto.assoc_loaded?(article.reactions) do
         reactions = ArticleReaction.to_json("reactions.json", article.reactions)
         Map.put(data, :reactions, reactions)
+      else
+        data
+      end
+
+    data =
+      if Ecto.assoc_loaded?(article.account) do
+        account = Account.to_json("account.json", article.account)
+        Map.put(data, :account, account)
+      else
+        data
+      end
+
+    data =
+      if Ecto.assoc_loaded?(article.count_reactions) do
+        Map.put(data, :count_reactions, article.count_reactions |> length())
+      else
+        data
+      end
+
+    data =
+      if Ecto.assoc_loaded?(article.count_comments) do
+        Map.put(data, :count_comments, article.count_comments |> length())
       else
         data
       end

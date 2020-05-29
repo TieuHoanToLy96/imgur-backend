@@ -128,7 +128,7 @@ defmodule ImgurBackend.Upload.ArticleAction do
     end
   end
 
-  def get_article(article_id, account_id) do
+  def get_article(article_id, account_id, current_account_id) do
     preload_contents = from(ac in ArticleContent, where: ac.is_deleted == false)
     preload_tags = from(t in Tag)
 
@@ -140,7 +140,7 @@ defmodule ImgurBackend.Upload.ArticleAction do
     preload_account = from(a in Account)
 
     from(a in Article,
-      where: a.account_id == ^account_id and a.id == ^article_id and a.is_deleted == false,
+      where: a.id == ^article_id and a.is_deleted == false,
       preload: [
         article_tags: ^preload_article_tags,
         article_contents: ^preload_contents,
@@ -167,8 +167,170 @@ defmodule ImgurBackend.Upload.ArticleAction do
     end
   end
 
-  def search_articles_user(params) do
-    IO.inspect(params, label: "1111111")
+  def get_articles(params, opts \\ []) do
+    term = params["term"]
+    page = params["page"] || 1
+    limit = params["limit"] || 50
+    offset = (page - 1) * limit
+    account_id = params["account_id"]
+    type = params["type"]
+    is_preload_reaction = Keyword.get(opts, :is_preload_reaction)
+    is_preload_view = Keyword.get(opts, :is_preload_view)
+    is_preload_content = Keyword.get(opts, :is_preload_content)
+    is_preload_account = Keyword.get(opts, :is_preload_account)
+    is_preload_comment = Keyword.get(opts, :is_preload_comment)
+    is_get_favorite = Keyword.get(opts, :is_get_favorite)
+    is_story = Keyword.get(opts, :is_story)
+    is_get_one = Keyword.get(opts, :is_get_one)
+    is_get_comment = Keyword.get(opts, :is_get_comment)
+
+    current_account_id = Keyword.get(opts, :current_account_id)
+
+    preload_contents = from(ac in ArticleContent, where: ac.is_deleted == false)
+    preload_account = from(a in Account)
+    preload_count_reaction = from(ar in ArticleReaction, select: count(ar.id), group_by: ar.id)
+    preload_count_comment = from(c in Comment, select: count(c.id), group_by: c.id)
+    preload_count_view = from(av in ArticleView, select: sum(av.count))
+
+    condition_where = dynamic([a], not a.is_deleted)
+
+    condition_where =
+      if term,
+        do: dynamic([a], ^condition_where and ilike(a.title, ^"%#{term}%")),
+        else: condition_where
+
+    condition_where =
+      if is_story,
+        do: dynamic([a], ^condition_where and a.is_story),
+        else: condition_where
+
+    condition_where =
+      if is_get_one && !is_get_favorite,
+        do: dynamic([a], ^condition_where and a.account_id == ^account_id),
+        else: condition_where
+
+    condition_where =
+      cond do
+        type == "public" ->
+          dynamic([a], ^condition_where and a.is_published == true)
+
+        type == "private" && current_account_id == account_id ->
+          dynamic(
+            [a],
+            ^condition_where and a.account_id == ^account_id and a.is_published == false
+          )
+
+        true ->
+          dynamic([a], ^condition_where and a.is_published == true)
+      end
+
+    query =
+      from(
+        a in Article,
+        where: ^condition_where
+      )
+
+    count =
+      from(a in query, select: count(a.id))
+      |> Repo.one()
+
+    preload =
+      if is_preload_content,
+        do: [article_contents: preload_contents],
+        else: nil
+
+    preload =
+      if is_preload_account,
+        do: preload ++ [account: preload_account],
+        else: preload
+
+    preload =
+      if is_preload_reaction,
+        do: preload ++ [count_reactions: preload_count_reaction],
+        else: preload
+
+    preload =
+      if is_preload_comment,
+        do: preload ++ [count_comments: preload_count_comment],
+        else: preload
+
+    preload =
+      if is_preload_view,
+        do: preload ++ [count_views: preload_count_view],
+        else: preload
+
+    query =
+      if preload do
+        from(
+          a in query,
+          preload: ^preload,
+          where: ^condition_where,
+          offset: ^offset,
+          limit: ^limit,
+          order_by: [desc: a.inserted_at]
+        )
+      else
+        from(
+          a in query,
+          where: ^condition_where,
+          offset: ^offset,
+          limit: ^limit,
+          order_by: [desc: a.inserted_at]
+        )
+      end
+
+    query =
+      if is_get_favorite do
+        condition_where = dynamic([a, ar], ^condition_where and ar.account_id == ^account_id)
+
+        from(
+          a in Article,
+          left_join: ar in ArticleReaction,
+          on: a.id == ar.article_id,
+          where: ^condition_where,
+          preload: ^preload
+        )
+      else
+        query
+      end
+
+    query =
+      if is_get_comment do
+        condition_where = dynamic([a, c], ^condition_where and c.account_id == ^account_id)
+
+        from(
+          a in Article,
+          left_join: c in Comment,
+          on: a.id == c.article_id,
+          where: ^condition_where,
+          preload: ^preload
+        )
+      else
+        query
+      end
+
+    articles = Repo.all(query)
+
+    {:ok, %{count: count, articles: articles}}
+  end
+
+  def search_articles_user(current_account_id, params, opts \\ []) do
+    opts =
+      opts ++
+        [
+          current_account_id: current_account_id,
+          is_preload_reaction: true,
+          is_preload_comment: true,
+          is_preload_content: true,
+          is_preload_account: true,
+          is_preload_view: true,
+          is_get_one: true
+        ]
+
+    get_articles(params, opts)
+  end
+
+  def search_articles_user_old(current_account_id, params, opts \\ []) do
     preload_contents = from(ac in ArticleContent, where: ac.is_deleted == false)
     #     preload_views = from(av in ArticleView, select: sum(av.count))
 
@@ -203,7 +365,6 @@ defmodule ImgurBackend.Upload.ArticleAction do
       )
 
     {:ok, Repo.all(query)}
-    |> IO.inspect(label: "iiiiiii")
   end
 
   def create_or_update_comment(account_id, params) do
@@ -311,5 +472,20 @@ defmodule ImgurBackend.Upload.ArticleAction do
     end
     |> CommentReaction.changeset(params)
     |> Repo.insert_or_update()
+  end
+
+  def update_article_view(account_id, article_id) do
+    Repo.get_by(ArticleView, %{account_id: account_id, article_id: article_id})
+    |> case do
+      nil ->
+        %ArticleView{}
+        |> ArticleView.changeset(%{account_id: account_id, article_id: article_id, count: 1})
+        |> Repo.insert()
+
+      value ->
+        value
+        |> ArticleView.changeset(%{count: value.count + 1})
+        |> Repo.update()
+    end
   end
 end

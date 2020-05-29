@@ -15,6 +15,13 @@ defmodule ImgurBackendWeb.Router do
     pipe_through(:api)
 
     scope "/v1" do
+      get("/search", SearchController, :search)
+      get("/all_articles", ArticleController, :get_all)
+      get("/all_story", ArticleController, :get_all_story)
+
+      scope("/statistic") do
+      end
+
       scope "/account" do
         get("/get_user", AccountController, :get_user)
         post("/update", AccountController, :update)
@@ -31,6 +38,7 @@ defmodule ImgurBackendWeb.Router do
         pipe_through(:app)
         get("/show", ArticleController, :show)
         get("/search", ArticleController, :index)
+
         post("/create_or_update", ArticleController, :create_or_update)
       end
 

@@ -51,7 +51,7 @@ defmodule ImgurBackendWeb.V1.FileController do
   end
 
   def upload_file(conn, params) do
-    IO.inspect(params, label: "aaaa")
+    IO.inspect(conn, label: "aaaa")
     file = params["file"]
     file_type = file.content_type
     file_extension = String.split(file.filename, ".") |> List.last()
