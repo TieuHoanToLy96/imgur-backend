@@ -30,6 +30,7 @@ defmodule ImgurBackend.Upload.Article do
 
     has_many(:count_comments, Comment, foreign_key: :article_id)
     has_many(:count_reactions, ArticleReaction, foreign_key: :article_id)
+    has_many(:count_views, ArticleView, foreign_key: :article_id)
     timestamps()
   end
 

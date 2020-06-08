@@ -11,7 +11,8 @@ defmodule ImgurBackendWeb.V1.ArticleView do
       :type,
       :id,
       :reaction_count,
-      :is_story
+      :is_story,
+      :account_id
     ])
   end
 

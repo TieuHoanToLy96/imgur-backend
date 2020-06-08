@@ -4,11 +4,12 @@ defmodule ImgurBackendWeb.V1.ArticleController do
   alias ImgurBackendWeb.V1.ArticleView
   alias ImgurBackend.Upload.{ArticleAction, Comment, ArticleReaction}
   alias ImgurBackend.{Repo, Accounts}
+  alias ImgurBackend.Accounts.Notification
 
   action_fallback(ImgurBackendWeb.FallbackController)
 
   def index(conn, params) do
-    current_account_id = conn.assigns.account.id
+    current_account_id = if conn.assigns != %{}, do: conn.assigns.account.id
     account_url = params["account_url"]
     opts = []
 
@@ -90,6 +91,24 @@ defmodule ImgurBackendWeb.V1.ArticleController do
       |> Multi.run(:comment, fn _ ->
         ArticleAction.create_or_update_comment(account_id, params)
       end)
+      |> Multi.run(:notification, fn _ ->
+        if account_id != params["account_id"] do
+          data = %{
+            content: "đã bình luận bài viết của bạn",
+            url: "/posts/#{params["article_id"]}/edit",
+            sender_id: account_id,
+            receiver_id: params["account_id"],
+            type: 3
+          }
+
+          Accounts.send_notification(data)
+        else
+          {:ok, :pass}
+        end
+      end)
+      |> Multi.run(:count_noti, fn _ ->
+        Accounts.count_notifications(params["account_id"])
+      end)
 
     case Repo.transaction(multi) do
       {:ok, result} ->
@@ -97,7 +116,26 @@ defmodule ImgurBackendWeb.V1.ArticleController do
 
         with {:ok, comment} <- ArticleAction.get_comment(c.id) do
           comment = Comment.to_json("comment.json", comment)
-          {:success, :with_data, :comment, comment}
+
+          notification =
+            result.notification
+            |> case do
+              :pass ->
+                nil
+
+              value ->
+                Accounts.get_notification(value.id)
+                |> case do
+                  {:ok, v} ->
+                    Notification.to_json("notification.json", v)
+
+                  _ ->
+                    nil
+                end
+            end
+
+          {:success, :with_data, :data,
+           %{comment: comment, notification: notification, count_noti: result.count_noti}}
         end
 
       reason ->
@@ -112,13 +150,53 @@ defmodule ImgurBackendWeb.V1.ArticleController do
     multi =
       Multi.new()
       |> Multi.run(:reaction, fn _ ->
-        ArticleAction.create_or_update_reaction(account_id, params)
+        ArticleAction.create_or_update_reaction(
+          account_id,
+          params |> Map.put("account_id", account_id)
+        )
+      end)
+      |> Multi.run(:notification, fn _ ->
+        if account_id != params["account_id"] do
+          data = %{
+            content: "đã bày tỏ cảm xúc về bài viết của bạn",
+            url: "/posts/#{params["article_id"]}/edit",
+            sender_id: account_id,
+            receiver_id: params["account_id"],
+            type: 3
+          }
+
+          Accounts.send_notification(data)
+        else
+          {:ok, :pass}
+        end
+      end)
+      |> Multi.run(:count_noti, fn _ ->
+        Accounts.count_notifications(params["account_id"])
       end)
 
     case Repo.transaction(multi) do
       {:ok, result} ->
         reaction = ArticleReaction.to_json("reaction.json", result.reaction)
-        {:success, :with_data, :reaction, reaction}
+
+        notification =
+          result.notification
+          |> case do
+            :pass ->
+              nil
+
+            value ->
+              Accounts.get_notification(value.id)
+              |> case do
+                {:ok, v} ->
+                  Notification.to_json("notification.json", v)
+
+                _ ->
+                  nil
+              end
+          end
+
+        {:success, :with_data, :data,
+         %{reaction: reaction, notification: notification, count_noti: result.count_noti}}
 
       reason ->
         IO.inspect(reason, label: "create_or_update_reaction ERROR")

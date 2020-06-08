@@ -12,7 +12,7 @@ defmodule ImgurBackend.Accounts.Account do
     field(:is_global_admin, :boolean, default: false)
     field(:avatar, :string)
     field(:account_url, :string, null: false)
-    field(:settings, :map, default: %{})
+    field(:settings, :map)
 
     has_many(:articles, Article, foreign_key: :account_id)
     timestamps()

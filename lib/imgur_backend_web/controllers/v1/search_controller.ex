@@ -14,18 +14,16 @@ defmodule ImgurBackendWeb.V1.SearchController do
       articles = ArticleView.render_many("articles.json", articles)
       accounts = Account.to_json("accounts.json", accounts)
 
-      data =
-        %{
-          article: %{
-            count: count_article,
-            posts: articles
-          },
-          account: %{
-            count: count_account,
-            accounts: accounts
-          }
+      data = %{
+        article: %{
+          count: count_article,
+          posts: articles
+        },
+        account: %{
+          count: count_account,
+          accounts: accounts
         }
-        |> IO.inspect(label: "iiiiiii")
+      }
 
       {:success, :with_data, :data, data}
     end

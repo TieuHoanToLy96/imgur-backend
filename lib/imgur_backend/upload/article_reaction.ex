@@ -19,7 +19,7 @@ defmodule ImgurBackend.Upload.ArticleReaction do
   end
 
   def to_json("reaction.json", reaction) do
-    Map.take(reaction, [:id, :type_reaction, :count])
+    Map.take(reaction, [:id, :type_reaction, :count, :account_id])
   end
 
   def to_json("reactions.json", reactions) do

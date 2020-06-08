@@ -144,7 +144,8 @@ defmodule ImgurBackend.Upload.ArticleAction do
       preload: [
         article_tags: ^preload_article_tags,
         article_contents: ^preload_contents,
-        reactions: ^preload_reactions
+        reactions: ^preload_reactions,
+        account: ^preload_account
       ]
     )
     |> Repo.one()
@@ -190,7 +191,7 @@ defmodule ImgurBackend.Upload.ArticleAction do
     preload_account = from(a in Account)
     preload_count_reaction = from(ar in ArticleReaction, select: count(ar.id), group_by: ar.id)
     preload_count_comment = from(c in Comment, select: count(c.id), group_by: c.id)
-    preload_count_view = from(av in ArticleView, select: sum(av.count))
+    preload_count_view = from(av in ArticleView, select: sum(av.count), group_by: av.id)
 
     condition_where = dynamic([a], not a.is_deleted)
 
