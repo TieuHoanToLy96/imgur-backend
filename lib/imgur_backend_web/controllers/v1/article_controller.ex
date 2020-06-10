@@ -72,12 +72,15 @@ defmodule ImgurBackendWeb.V1.ArticleController do
   end
 
   def show(conn, params) do
-    current_account_id = conn.assigns.account.id
+    current_account_id = if conn.assigns.account, do: conn.assigns.account.id, else: nil
     account_id = params["account_id"]
     article_id = params["article_id"]
 
     with {:ok, article} <- ArticleAction.get_article(article_id, account_id, current_account_id) do
-      ArticleAction.update_article_view(current_account_id, article_id)
+      if current_account_id do
+        ArticleAction.update_article_view(current_account_id, article_id)
+      end
+
       article = ArticleView.render("article.json", article)
       {:success, :with_data, :article, article}
     end
