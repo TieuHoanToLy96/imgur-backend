@@ -48,12 +48,13 @@ defmodule ImgurBackendWeb.V1.AccountController do
                avatar: account.avatar
              },
              week: 4
-           ) do
+           ),
+         {:ok, count} <- Accounts.count_notifications(account.id) do
       account = AccountView.render("account_just_loaded.json", account)
 
       conn
       |> put_status(:ok)
-      |> json(%{success: true, account: account, token: token})
+      |> json(%{success: true, account: account, token: token, count_noti: count})
     end
   end
 

@@ -3,6 +3,7 @@ defmodule ImgurBackend.Accounts do
   alias ImgurBackend.Repo
   alias ImgurBackend.Accounts.{Account, RelationshipAccount, Notification}
   alias ImgurBackend.Upload.Article
+  alias ImgurBackend.App.Tools
 
   def get_account_by_id(id) do
     Repo.get(Account, id)
@@ -158,7 +159,12 @@ defmodule ImgurBackend.Accounts do
 
       value ->
         value
-        |> Notification.changeset(%{seen: true})
+        |> Notification.changeset(%{
+          seen: true,
+          updated_at: value.updated_at,
+          inserted_at: value.inserted_at
+        })
+        |> IO.inspect(label: "chaaaaaa")
         |> Repo.update()
     end
   end
@@ -192,22 +198,33 @@ defmodule ImgurBackend.Accounts do
 
   def search_friend(account_id, params) do
     term = params["term"]
+    page = if params["page"], do: Tools.to_int(params["page"]), else: 1
+    limit = if params["limit"], do: Tools.to_int(params["limit"]), else: 20
+    offset = (page - 1) * limit
+
+    condition_where = dynamic([a, ra], a.id != ^account_id and ra.status == 2)
+
+    condition_where =
+      if !Tools.is_empty?(term) do
+        dynamic(
+          [a, ra],
+          ^condition_where and (ilike(a.user_name, ^"%#{term}%") or ilike(a.email, ^"%#{term}%"))
+        )
+      else
+        condition_where
+      end
 
     friends =
-      if term do
-        from(
-          a in Account,
-          left_join: ra in RelationshipAccount,
-          on: ra.account_one_id == ^account_id or ra.account_two_id == ^account_id,
-          where:
-            a.id != ^account_id and ra.status == 2 and
-              (ilike(a.user_name, ^"%#{term}%") or ilike(a.email, ^"%#{term}%")),
-          distinct: a.id
-        )
-        |> Repo.all()
-      else
-        []
-      end
+      from(
+        a in Account,
+        left_join: ra in RelationshipAccount,
+        on: ra.account_one_id == ^account_id or ra.account_two_id == ^account_id,
+        where: ^condition_where,
+        offset: ^offset,
+        limit: ^limit,
+        distinct: a.id
+      )
+      |> Repo.all()
 
     {:ok, friends}
   end

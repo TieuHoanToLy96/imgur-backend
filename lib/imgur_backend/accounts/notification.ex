@@ -18,7 +18,10 @@ defmodule ImgurBackend.Accounts.Notification do
 
   def changeset(%Notification{} = n, attrs \\ %{}) do
     n
-    |> cast(attrs, [:id, :content, :url, :sender_id, :receiver_id, :seen, :type])
+    |> cast(
+      attrs,
+      [:id, :content, :url, :sender_id, :receiver_id, :seen, :type, :updated_at, :inserted_at]
+    )
   end
 
   def to_json("notification.json", n) do

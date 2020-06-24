@@ -7,7 +7,6 @@ defmodule ImgurBackendWeb.Plug.TokenPlug do
   end
 
   def call(conn, _opts) do
-    IO.inspect(conn, label: "kkkkkk")
     token = conn.params["token"]
 
     token =

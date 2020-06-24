@@ -72,11 +72,11 @@ defmodule ImgurBackendWeb.V1.ArticleController do
   end
 
   def show(conn, params) do
-    current_account_id = if conn.assigns.account, do: conn.assigns.account.id, else: nil
+    current_account_id = if conn.assigns[:account], do: conn.assigns.account[:id], else: nil
     account_id = params["account_id"]
     article_id = params["article_id"]
 
-    with {:ok, article} <- ArticleAction.get_article(article_id, account_id, current_account_id) do
+    with {:ok, article} <- ArticleAction.get_article(article_id) do
       if current_account_id do
         ArticleAction.update_article_view(current_account_id, article_id)
       end
@@ -179,6 +179,7 @@ defmodule ImgurBackendWeb.V1.ArticleController do
 
     case Repo.transaction(multi) do
       {:ok, result} ->
+        reaction_count = ArticleAction.get_reaction_count(params["article_id"])
         reaction = ArticleReaction.to_json("reaction.json", result.reaction)
 
         notification =
@@ -199,7 +200,12 @@ defmodule ImgurBackendWeb.V1.ArticleController do
           end
 
         {:success, :with_data, :data,
-         %{reaction: reaction, notification: notification, count_noti: result.count_noti}}
+         %{
+           reaction: reaction,
+           notification: notification,
+           count_noti: result.count_noti,
+           reaction_count: reaction_count
+         }}
 
       reason ->
         IO.inspect(reason, label: "create_or_update_reaction ERROR")

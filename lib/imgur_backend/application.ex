@@ -9,9 +9,19 @@ defmodule ImgurBackend.Application do
     # Define workers and child supervisors to be supervised
     children = [
       supervisor(ImgurBackend.Repo, []),
-      supervisor(ImgurBackendWeb.Endpoint, []),
+      supervisor(ImgurBackendWeb.Endpoint, [])
       # supervisor(ImgurBackend.App.AmqpConnectionManager, [])
     ]
+
+    children000 =
+      if System.get_env("MIX_ENV") == "dev",
+        do:
+          children ++
+            [
+              # Start Amqp
+              supervisor(ImgurBackend.DynamicApp, [])
+            ],
+        else: children
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

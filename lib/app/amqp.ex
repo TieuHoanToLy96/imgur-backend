@@ -36,7 +36,7 @@ defmodule ImgurBackend.App.AmqpConnectionManager do
 
     Logger.info("URI: #{inspect(amqp_uri)}")
 
-    case Connection.open(amqp_uri) do
+    case Connection.open(amqp_uri) |> IO.inspect(label: "iiiiiiiiii") do
       {:ok, conn} ->
         Process.link(conn.pid)
         {:ok, {conn, %{}}}

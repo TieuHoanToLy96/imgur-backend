@@ -36,12 +36,11 @@ defmodule ImgurBackend.Upload.ArticleAction do
     old_tags =
       from(
         t in Tag,
-        where: t.title in ^tags,
-        select: t.title
+        where: t.title in ^tags
       )
       |> Repo.all()
 
-    new_tags = tags -- old_tags
+    new_tags = tags -- Enum.map(old_tags, & &1.title)
 
     new_tags =
       Enum.map(new_tags, fn el ->
@@ -62,7 +61,7 @@ defmodule ImgurBackend.Upload.ArticleAction do
       end)
 
     if length(error) == 0 do
-      {:ok, success}
+      {:ok, success ++ old_tags}
     else
       {:error, error}
     end
@@ -128,7 +127,7 @@ defmodule ImgurBackend.Upload.ArticleAction do
     end
   end
 
-  def get_article(article_id, account_id, current_account_id) do
+  def get_article(article_id) do
     preload_contents = from(ac in ArticleContent, where: ac.is_deleted == false)
     preload_tags = from(t in Tag)
 
@@ -168,6 +167,20 @@ defmodule ImgurBackend.Upload.ArticleAction do
     end
   end
 
+  def get_reaction_count(article_id) do
+    reaction_count =
+      from(
+        ar in ArticleReaction,
+        where: ar.article_id == ^article_id,
+        select: %{count: count(ar.type_reaction), type_reaction: ar.type_reaction},
+        group_by: [ar.type_reaction, ar.article_id],
+        order_by: [asc: ar.type_reaction]
+      )
+      |> Repo.all()
+
+    reaction_count
+  end
+
   def get_articles(params, opts \\ []) do
     term = params["term"]
     page = params["page"] || 1
@@ -197,7 +210,11 @@ defmodule ImgurBackend.Upload.ArticleAction do
 
     condition_where =
       if term,
-        do: dynamic([a], ^condition_where and ilike(a.title, ^"%#{term}%")),
+        do:
+          dynamic(
+            [a, at, t],
+            ^condition_where and (ilike(a.title, ^"%#{term}%") or ilike(t.title, ^"%#{term}%"))
+          ),
         else: condition_where
 
     condition_where =
@@ -226,10 +243,21 @@ defmodule ImgurBackend.Upload.ArticleAction do
       end
 
     query =
-      from(
-        a in Article,
-        where: ^condition_where
-      )
+      if term do
+        from(
+          a in Article,
+          left_join: at in ArticleTag,
+          on: at.article_id == a.id,
+          left_join: t in Tag,
+          on: t.id == at.tag_id,
+          where: ^condition_where
+        )
+      else
+        from(
+          a in Article,
+          where: ^condition_where
+        )
+      end
 
     count =
       from(a in query, select: count(a.id))

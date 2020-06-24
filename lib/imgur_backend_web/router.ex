@@ -62,8 +62,8 @@ defmodule ImgurBackendWeb.Router do
       end
 
       scope "/comment" do
-        pipe_through(:app)
         get("/list", ArticleController, :get_comments)
+        pipe_through(:app)
         post("/create_or_update", ArticleController, :create_or_update_comment)
         post("/reaction", ArticleController, :update_reaction_comment)
       end
